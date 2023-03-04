@@ -13,10 +13,12 @@
 
 int decimals1 = 0;    // 小数位数1
 int decimals2 = 0;    // 小数位数2
+char sci_notation1[MAX_LEN];   //第一个数字的科学计数法
+char sci_notation2[MAX_LEN];   //第二个数字的科学计数法
 
 void multiply(char* num1, char* num2);  // 乘法函数声明
 void subtract(char* num1, char* num2);  // 减法函数声明
-void subtractHelping(char* num1, char* num2,int i, int j, int len1, int len2, bool isFlag);  // 减法辅助函数声明
+void subtractHelping(char* num1, char* num2,int i, int j, int len1, int len2, bool isFlag, int sci1, int sci2);  // 减法辅助函数声明
 void divide(char* num1, char* num2);  // 除法函数声明
 void add(char* num1, char* num2, bool allNegative);  // 加法函数声明
 bool whetherIsDigit(char* num, int type);  // 判断是否是数字函数声明
@@ -79,6 +81,16 @@ void multiply(char* num1, char* num2) {
         }
         printf("%d", result[i]);
     }
+    //对科学计数法的处理
+    //如果sci_notation中，其中一个不为0，则先打印一个E，然后将这两个数字相加，最后输出
+    if(sci_notation1 != 0 || sci_notation2 != 0) {
+        printf("E");
+        //直接转化为int类型，然后相加
+        int sci1 = atoi(sci_notation1);
+        int sci2 = atoi(sci_notation2);
+        int sci = sci1 + sci2;
+        printf("%d", sci);
+    }
     printf("\n");
 }
 
@@ -94,6 +106,20 @@ void add(char* num1, char* num2, bool allNegative) {
     //获取两个数的长度
     int len1 = strlen(num1);
     int len2 = strlen(num2);
+
+    //根据科学计数法来操作。
+    //比较sci_notation1和sci_notation2的大小，将较小的那个更改为较大的那个的值，并让较小的那个的decimals加上差的值
+    //如果两个都是0则忽略这一步
+    int sci1 = atoi(sci_notation1);
+    int sci2 = atoi(sci_notation2);
+    if(sci1 > sci2) {
+        decimals2 += sci1 - sci2;
+        sci2 = sci1;
+    } else if(sci1 < sci2) {
+        decimals1 += sci2 - sci1;
+        sci1 = sci2;
+    }
+    
 
     //如果decimals1和decimals2不相等，则往小的那个数的末尾补0
     if (decimals1 > decimals2) {
@@ -153,6 +179,11 @@ void add(char* num1, char* num2, bool allNegative) {
         printf("%d", result[i]);
     }
 
+    //再打印科学计数法，如果都是0，则不用打印
+    if(sci1 != 0 || sci2 != 0) {
+        printf("E");
+        printf("%d", sci1);
+    }
     printf("\n");
 }
 
@@ -168,6 +199,20 @@ void subtract(char* num1, char* num2) {
     //获取两个数的长度
     int len1 = strlen(num1);
     int len2 = strlen(num2);
+
+    //根据科学计数法来操作。
+    //比较sci_notation1和sci_notation2的大小，将较小的那个更改为较大的那个的值，并让较小的那个的decimals加上差的值
+    //如果两个都是0则忽略这一步
+    int sci1 = atoi(sci_notation1);
+    int sci2 = atoi(sci_notation2);
+    if(sci1 > sci2) {
+        decimals2 += sci1 - sci2;
+        sci2 = sci1;
+    } else if(sci1 < sci2) {
+        decimals1 += sci2 - sci1;
+        sci1 = sci2;
+    }
+
     //如果decimals1和decimals2不相等，则往小的那个数的末尾补0
     if (decimals1 > decimals2) {
         for (int i = 0; i < decimals1 - decimals2; i++) {
@@ -192,14 +237,14 @@ void subtract(char* num1, char* num2) {
     bool smallerFlag = isSmaller(num1, num2);
 
     if(smallerFlag){
-       subtractHelping(num2, num1, j, i, len2, len1, smallerFlag);
+       subtractHelping(num2, num1, j, i, len2, len1, smallerFlag, sci2, sci1);
     }else{
-       subtractHelping(num1, num2, i, j, len1, len2, smallerFlag);
+       subtractHelping(num1, num2, i, j, len1, len2, smallerFlag, sci1, sci2);
     }
 
 }
 
-void subtractHelping(char* num1, char* num2, int i, int j, int len1, int len2, bool smallerFlag) {
+void subtractHelping(char* num1, char* num2, int i, int j, int len1, int len2, bool smallerFlag, int sci1, int sci2) {
         while (i >= 0 && j >= 0) {
         if (num1[i] >= num2[j]) {
             num1[i] = num1[i] - num2[j] + '0';
@@ -236,6 +281,11 @@ void subtractHelping(char* num1, char* num2, int i, int j, int len1, int len2, b
             printf(".");
         }
         printf("%c", num1[i]);
+    }
+    //再打印科学计数法，如果都是0，则不用打印
+    if(sci1 != 0 || sci2 != 0) {
+        printf("E");
+        printf("%d", sci1);
     }
 }
 
@@ -434,23 +484,45 @@ bool whetherIsDigit(char* num, int type) {
             if (dotCount > 1) {
                 return false;
             }
+            bool sciFlag = false;
             for (int j = i; j < strlen(num) - 1; j++) {
+                //当接下来的字符为E时，证明后续为科学计数法的位数。只将其覆盖前一位，不对decimals++
+                if(num[j + 1] == 'E'){
+                    sciFlag = true;
+                }
                 num[j] = num[j + 1];
-                if(type == 1){
+                if(type == 1 && !sciFlag){
                     decimals1++;
-                }else{
+                }else if(type == 2 && !sciFlag){
                     decimals2++;
                 }
             }
             num[strlen(num) - 1] = '\0';
         }else if (num[i] < '0' || num[i] > '9'){
+            //对科学计数法的判断：如果有E，则将E后面的数字，根据type类型，放到sci_notation里面。原数字仅保留E以前的数字
+            if(num[i] == 'E'){
+                int k = i + 1;
+                for(; k < strlen(num); k++){
+                    if(num[k] < '0' || num[k] > '9'){
+                        return false;
+                    }
+                }
+                if(type == 1){
+                    strcpy(sci_notation1, num + i + 1);
+                }else{
+                    strcpy(sci_notation2, num + i + 1);
+                }
+                num[i] = '\0';
+                break;
+            }
+            printf("Error: invalid input\n");
             return false;
         }
     }
     return true;
 }
 
-bool isNegative(char* num) {
+inline bool isNegative(char* num) {
     if (num[0] == '-') {
         return true;
     }
@@ -458,7 +530,7 @@ bool isNegative(char* num) {
 }
 
 //计算实际长度，去掉前面的0
-int realLen(char* num) {
+inline int realLen(char* num) {
     int i = 0;
     if (num[0] == '-') {
         i = 1;
@@ -500,10 +572,11 @@ int main(int argc, char *argv[]) {
             strcpy(b,argv[3]);
         }
         
-        //将这个算式打印出来
-        printf("%s %c %s = ", a, operate, b);
+        
         //判断是否是数字
         if (whetherIsDigit(a,1) && whetherIsDigit(b,2)) {
+            //将这个算式打印出来
+        printf("%s %c %s = ", a, operate, b);
             canFlag = true;
             if(operate == '+'){
                 //如果两个数字都是正数或者都是负数，则直接相加。但若是负数，则在最后输出结果时加上负号。
