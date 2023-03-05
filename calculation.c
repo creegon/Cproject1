@@ -352,7 +352,6 @@ void divide(char* num1, char* num2){
                 }
                 //再次检查
                 if(isSmaller2(num1, num2,curIndex)){
-                    // printf("check fail!\n");
                     break;
                 }
                 int j = len2 - 1;
@@ -373,13 +372,11 @@ void divide(char* num1, char* num2){
                 }
                 count++;
             }
-            // printf("%d\n",count);
             result[realIndex - len2 + 1] = count + '0';
         }
     }
+    //添加终止符
     result[realLen1 + PRECISION - len2 + 1] = '\0';
-    // printf("length is : %d\n",realLen1 + PRECISION - len2 + 1);
-    // printf("length is : %d\n",strlen(result));
     //打印结果(注意打印小数点)（还有负号）
     if(addFu) {
         printf("-");
@@ -451,6 +448,7 @@ bool isSmaller(char* num1, char* num2){
     return false;
 }
 
+//相当于重载这个方法
 bool isSmaller2(char* num1, char* num2, int curIndex){
     int len1 = curIndex + 1;
     int len2 = strlen(num2);
@@ -572,11 +570,12 @@ int main(int argc, char *argv[]) {
             strcpy(b,argv[3]);
         }
         
-        
+        //将这个算式打印出来
+        printf("%s %c %s = ", a, operate, b);
+
         //判断是否是数字
         if (whetherIsDigit(a,1) && whetherIsDigit(b,2)) {
-            //将这个算式打印出来
-        printf("%s %c %s = ", a, operate, b);
+   
             canFlag = true;
             if(operate == '+'){
                 //如果两个数字都是正数或者都是负数，则直接相加。但若是负数，则在最后输出结果时加上负号。
@@ -614,7 +613,7 @@ int main(int argc, char *argv[]) {
             }else if(operate == '/'){
                 divide(a, b);
             }else{
-                printf("输入错误");
+                printf("wrong input!");
             }
         } else {
             noDigitFlag = true;
